@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using System;
+using TMPro;
 
 public class collidablePlayerMovement : MonoBehaviour
 {
@@ -11,13 +13,19 @@ public class collidablePlayerMovement : MonoBehaviour
 	private Vector2 movement;
     public UDPReceive udp;
 	public GameObject GameOver;
-	
-	public int health = 100;
+
+    public Slider hb;
+    public TMP_Text scr;
+    public TMP_Text final_scr;
+
+    public int health = 100;
+    public int score = 0;
+    public float fscore = 0.0f;
+
     void Start()
     {
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = false;
-
     }
     void Update()
     {
@@ -55,18 +63,22 @@ public class collidablePlayerMovement : MonoBehaviour
         {
             movement = new Vector2(1f, 0f).normalized;
         }
-        
-        if(health < 1){
-			GameOver.SetActive(true);
+
+        updateHealthbar(health);
+        updateScore();
+
+        if (health < 1){
+            final_scr.text = "Score: " + score.ToString();
+            GameOver.SetActive(true);
 			Time.timeScale = 0;
 		}
-        
+
     }
 	void FixedUpdate()
 	{
 		rotateCheck();
 		moveCharacter(movement);
-	}
+    }
     public void rotateCheck()
     {    /*
          Vector3 playerPos = cam1.WorldToScreenPoint(playerRigidbody.position); // gets player position on screen
@@ -129,5 +141,21 @@ public class collidablePlayerMovement : MonoBehaviour
         // We multiply the 'speed' variable to the Rigidbody's velocity...
         // and also multiply 'Time.fixedDeltaTime' to keep the movement consistant on all devices
         playerRigidbody.velocity = direction * playerSpeedCoefficient * Time.fixedDeltaTime;
+    }
+
+    void updateHealthbar(int h)
+    {
+        hb.value = (float)(h / 100.0);
+    }
+
+    void updateScore()
+    {
+        if (health >= 0)
+        {
+            fscore += 10 * Time.deltaTime;
+        }
+        score = 10 * ((int)fscore / 10);        // score is an integer multiple of 10 closest to fscore
+
+        scr.text = score.ToString();            // update HUD text
     }
 }
