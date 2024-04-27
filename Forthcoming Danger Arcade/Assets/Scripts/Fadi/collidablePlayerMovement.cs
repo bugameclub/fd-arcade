@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using TMPro;
+using System.IO;
 
 public class collidablePlayerMovement : MonoBehaviour
 {
@@ -21,6 +22,10 @@ public class collidablePlayerMovement : MonoBehaviour
     public int health = 100;
     public int score = 0;
     public float fscore = 0.0f;
+
+    string file = "Assets/Saves/scores.txt";
+    public TMP_Text sb1;
+    public TMP_Text sb2;
 
     void Start()
     {
@@ -69,6 +74,7 @@ public class collidablePlayerMovement : MonoBehaviour
 
         if (health < 1 && !GameOver.activeSelf){
             final_scr.text = "Score: " + score.ToString();
+            updateScoreboard(score);
             GameOver.SetActive(true);
 			Time.timeScale = 0;
 		}
@@ -157,5 +163,66 @@ public class collidablePlayerMovement : MonoBehaviour
         score = 10 * ((int)fscore / 10);        // score is an integer multiple of 10 closest to fscore
 
         scr.text = score.ToString();            // update HUD text
+    }
+
+    void updateScoreboard(int scr)
+    {
+        if (File.Exists(file))
+        {
+            // put scores from text file into array, add current score, and sort:
+
+            int[] intScores = new int[7];
+
+            var sr = File.OpenText(file);
+            var line = sr.ReadLine();
+            for (int i = 0; i <= 5; i++)
+            {
+                intScores[i] = int.Parse(line);
+                line = sr.ReadLine();
+            }
+            intScores[6] = scr;
+            sr.Close();
+
+            Array.Sort(intScores);
+            Array.Reverse(intScores);
+
+            // delete and recreate list (yes there is probably a better way to do this)
+
+            File.Delete(file);
+            StreamWriter sw = File.CreateText(file);
+
+            for (int i = 0; i <= 5; i++)
+            {
+                sw.WriteLine(intScores[i].ToString());
+            }
+            sw.Close();
+
+            // edit on-screen text:
+
+            for (int i = 0; i <= 1; i++)
+            {
+                string sbstr = "";
+                for (int j = 0; j <= 2; j++)
+                {
+                    sbstr += (((3*i) + j) + 1).ToString() + ": " + intScores[(3*i) + j].ToString() + "\n";
+                }
+                if (i == 0) sb1.text = sbstr; else sb2.text = sbstr;
+            }
+
+            // debug:
+
+            string result = "List contents: ";
+            foreach (var item in intScores)
+            {
+                result += item.ToString() + ", ";
+            }
+            Debug.Log(result);
+        }
+        else
+        {
+            Debug.Log("Could not Open the file: " + file + " for reading.");
+            Debug.Log(Directory.GetCurrentDirectory());
+            return;
+        }
     }
 }
